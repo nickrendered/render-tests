@@ -1,0 +1,28 @@
+# Single autoscaled backend that generates its own CPU load with stress-ng
+# (https://github.com/containerstack/docker-cpustress).
+#
+# It's a background worker because stress-ng doesn't serve HTTP. Each instance
+# burns a fixed share of CPU, so load doesn't spread out as instances are added:
+# with --cpu-load above targetCPUPercent it scales straight to maxInstances and
+# stays there; below the target it stays at minInstances.
+#
+# dockerCommand replaces the image's entrypoint and is exec'd without a shell.
+# Without --timeout, stress-ng exits after 24h and Render restarts it.
+
+projects:
+  - name: autoscaling-cpu
+    environments:
+      - name: production
+        services:
+          - type: worker
+            name: cpustress
+            runtime: image
+            image:
+              url: docker.io/containerstack/cpustress:latest
+            plan: standard
+            region: oregon
+            dockerCommand: /usr/bin/stress-ng --cpu 1 --cpu-load 80 --metrics-brief
+            scaling:
+              minInstances: 1
+              maxInstances: 5
+              targetCPUPercent: 50
