@@ -6,6 +6,7 @@ projects:
           - type: web
             name: memos
             runtime: image
+            numInstances: 2
             image:
               url: docker.io/neosmemo/memos:stable
             plan: starter
