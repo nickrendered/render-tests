@@ -1,0 +1,35 @@
+projects:
+  - name: memos
+    environments:
+      - name: test
+        services:
+          - type: web
+            name: memos
+            runtime: image
+            image:
+              url: docker.io/neosmemo/memos:stable
+            plan: starter
+            region: oregon
+            healthCheckPath: /healthz
+            envVars:
+              - key: MEMOS_MODE
+                value: prod
+              - key: MEMOS_PORT
+                value: "5230"
+              - key: PORT
+                value: "5230"
+              - key: MEMOS_DRIVER
+                value: postgres
+              - key: MEMOS_DSN
+                fromDatabase:
+                  name: memos-db
+                  property: connectionString
+
+        databases:
+          - name: memos-db
+            databaseName: memos
+            user: memos
+            plan: basic-256mb
+            region: oregon
+            postgresMajorVersion: "16"
+            ipAllowList: [] # only reachable from services in your Render workspace
