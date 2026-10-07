@@ -1,0 +1,49 @@
+# Three-tier fake-service demo: frontend (public) -> middleware -> backend (private).
+#
+# Each tier calls the next over Render's private network. The upstream hostname
+# is injected with fromService (Render adds a random suffix to slugs), and the
+# start command builds UPSTREAM_URIS from it using the "-discovery" hostname,
+# which resolves straight to instance IPs.
+#
+# The start command has no quotes or spaces because Render execs dockerCommand
+# directly (no shell, quotes passed through literally), so ${IFS} separates words.
+
+projects:
+  - name: self-referencing-environment
+    environments:
+      - name: production
+        services:
+          - type: web
+            name: fake-frontend
+            runtime: image
+            image:
+              url: docker.io/nicholasjackson/fake-service:v0.26.2
+            plan: standard
+            region: oregon
+            healthCheckPath: /health
+            dockerCommand: 'sh -c exec${IFS}env${IFS}UPSTREAM_URIS=http://${UPSTREAM_HOST}-discovery:${UPSTREAM_PORT:-10000}${IFS}/app/fake-service'
+            # Autoscaling requires a Professional (or higher) workspace. On Hobby,
+            # replace this block with `numInstances: 1`.
+            scaling:
+              minInstances: 1
+              maxInstances: 3
+              targetCPUPercent: 70
+              targetMemoryPercent: 80
+            envVars:
+              - key: NAME
+                fromService:
+                  name: fake-frontend
+                  type: web
+                  envVarKey: RENDER_EXTERNAL_HOSTNAME
+              - key: MESSAGE
+                value: Hello from the frontend
+              - key: LISTEN_ADDR
+                value: 0.0.0.0:10000
+              - key: PORT
+                value: "10000"
+              - key: UPSTREAM_HOST
+                fromService:
+                  type: pserv
+                  name: fake-middleware
+                  property: host
+
