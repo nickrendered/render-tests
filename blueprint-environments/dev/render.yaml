@@ -13,6 +13,8 @@ projects:
             region: oregon
             healthCheckPath: /healthz
             envVars:
+              - key: bogus
+                value: true
               - key: MEMOS_MODE
                 value: prod
               - key: MEMOS_PORT
