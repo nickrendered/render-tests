@@ -41,3 +41,5 @@ projects:
                 value: 0.0.0.0:10000
               - key: PORT
                 value: "10000"
+              - key: BOGUS
+                value: true
