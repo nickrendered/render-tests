@@ -1,0 +1,6 @@
+project:
+  name: workflow
+  environments:
+    - name: development
+    - name: staging
+    - name: production
